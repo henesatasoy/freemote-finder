@@ -112,114 +112,20 @@ async function fetchRemoteOKJobs() {
   }
 }
 
-// Fetch jobs from WeWorkRemotely (RSS feed)
+// Skip WeWorkRemotely for now and focus on working sources
 async function fetchWWRJobs() {
-  try {
-    console.log('Fetching jobs from WeWorkRemotely...')
-    // WWR RSS feed
-    const response = await fetch('https://weworkremotely.com/remote-jobs.rss')
-    
-    if (!response.ok) {
-      throw new Error(`WWR RSS error: ${response.status}`)
-    }
-    
-    const text = await response.text()
-    console.log('WWR RSS sample:', text.substring(0, 500))
-    
-    // Improved RSS parsing
-    const items = text.match(/<item[^>]*>(.*?)<\/item>/gs) || []
-    console.log(`Found ${items.length} items in WWR RSS`)
-    
-    const jobs = items.slice(0, 15).map((item, index) => {
-      // Try multiple title formats
-      let title = item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/s)?.[1] || 
-                  item.match(/<title>(.*?)<\/title>/s)?.[1] || 
-                  `Remote Job ${index + 1}`
-      
-      let link = item.match(/<link><!\[CDATA\[(.*?)\]\]><\/link>/s)?.[1] || 
-                 item.match(/<link>(.*?)<\/link>/s)?.[1] || ''
-      
-      let description = item.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/s)?.[1] || 
-                       item.match(/<description>(.*?)<\/description>/s)?.[1] || ''
-      
-      let pubDate = item.match(/<pubDate>(.*?)<\/pubDate>/s)?.[1] || ''
-      
-      // Clean HTML and decode entities
-      title = title.replace(/<[^>]*>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').trim()
-      description = description.replace(/<[^>]*>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').trim()
-      
-      // Extract company and job title
-      let company = 'WeWorkRemotely'
-      let jobTitle = title
-      
-      // Try different title parsing strategies
-      if (title.includes(':')) {
-        const parts = title.split(':')
-        if (parts.length >= 2) {
-          company = parts[0].trim()
-          jobTitle = parts.slice(1).join(':').trim()
-        }
-      } else if (title.includes(' at ')) {
-        const parts = title.split(' at ')
-        if (parts.length >= 2) {
-          jobTitle = parts[0].trim()
-          company = parts[1].trim()
-        }
-      } else if (title.includes(' - ')) {
-        const parts = title.split(' - ')
-        if (parts.length >= 2) {
-          company = parts[0].trim()
-          jobTitle = parts.slice(1).join(' - ').trim()
-        }
-      }
-      
-      // Ensure we have meaningful content
-      if (!jobTitle || jobTitle.length < 3) {
-        jobTitle = `Remote Position ${index + 1}`
-      }
-      
-      if (!company || company.length < 2) {
-        company = 'WeWorkRemotely'
-      }
-      
-      // Create a meaningful description if empty
-      if (!description || description.length < 10) {
-        description = `Remote ${jobTitle} position at ${company}. Check the full job details at WeWorkRemotely.`
-      }
-      
-      return {
-        title: jobTitle,
-        company: company,
-        location: 'Remote',
-        description: description.substring(0, 500), // Limit description length
-        salary: null,
-        language: detectLanguage(description + ' ' + title),
-        diploma_required: checkDiplomaRequirement(description),
-        source: 'WeWorkRemotely',
-        apply_url: link || 'https://weworkremotely.com',
-        published_date: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
-        tags: [],
-        sector: detectSector(jobTitle, [])
-      }
-    }).filter(job => job.title && job.title !== 'Remote Position' && job.apply_url)
-    
-    console.log(`Processed ${jobs.length} valid jobs from WeWorkRemotely`)
-    console.log('Sample job:', jobs[0])
-    return jobs
-  } catch (error) {
-    console.error('WeWorkRemotely fetch error:', error)
-    return []
-  }
+  console.log('Skipping WeWorkRemotely for now due to parsing issues')
+  return []
 }
 
-// Add some quality test jobs
+// Add more quality test jobs with better variety
 function getTestJobs() {
   return [
     {
       title: 'Senior React Developer',
       company: 'Tech Innovation Corp',
       location: 'Remote',
-      description: 'We are looking for an experienced React developer to join our growing team. You will work with modern technologies including React, TypeScript, and Node.js. Strong problem-solving skills and 3+ years of experience required.',
+      description: 'We are looking for an experienced React developer to join our growing team. You will work with modern technologies including React, TypeScript, and Node.js. Strong problem-solving skills and 3+ years of experience required. Build scalable web applications and collaborate with cross-functional teams.',
       salary: '$80,000 - $120,000',
       language: 'en',
       diploma_required: false,
@@ -233,7 +139,7 @@ function getTestJobs() {
       title: 'UI/UX Tasarımcısı',
       company: 'Dijital Ajans',
       location: 'İstanbul / Remote',
-      description: 'Kullanıcı deneyimi ve arayüz tasarımında uzman bir tasarımcı arıyoruz. Figma, Adobe Creative Suite ve prototyping araçlarında deneyim sahibi olmalısınız.',
+      description: 'Kullanıcı deneyimi ve arayüz tasarımında uzman bir tasarımcı arıyoruz. Figma, Adobe Creative Suite ve prototyping araçlarında deneyim sahibi olmalısınız. Modern web ve mobil uygulamalar için tasarım çözümleri geliştireceksiniz.',
       salary: '₺45,000 - ₺65,000',
       language: 'tr',
       diploma_required: false,
@@ -247,7 +153,7 @@ function getTestJobs() {
       title: 'Full Stack Developer',
       company: 'StartupHub',
       location: 'Remote',
-      description: 'Join our startup team! We need a versatile full-stack developer with experience in both frontend and backend development. University degree preferred but not required if you have strong portfolio.',
+      description: 'Join our startup team! We need a versatile full-stack developer with experience in both frontend and backend development. University degree preferred but not required if you have strong portfolio. Work with React, Node.js, PostgreSQL, and cloud technologies.',
       salary: '$60,000 - $100,000',
       language: 'both',
       diploma_required: true,
@@ -256,6 +162,76 @@ function getTestJobs() {
       published_date: new Date().toISOString(),
       tags: ['fullstack', 'javascript', 'nodejs', 'react'],
       sector: 'technology'
+    },
+    {
+      title: 'Digital Marketing Manager',
+      company: 'Growth Marketing Co',
+      location: 'Remote',
+      description: 'Lead our digital marketing efforts across multiple channels. Experience with SEO, SEM, social media marketing, and analytics required. Develop and execute marketing campaigns to drive customer acquisition and retention.',
+      salary: '$55,000 - $85,000',
+      language: 'en',
+      diploma_required: false,
+      source: 'Freemote',
+      apply_url: 'https://freemote.example.com/jobs/marketing-manager-1',
+      published_date: new Date().toISOString(),
+      tags: ['marketing', 'seo', 'sem', 'analytics'],
+      sector: 'marketing'
+    },
+    {
+      title: 'Python Backend Developer',
+      company: 'Data Solutions Inc',
+      location: 'Remote',
+      description: 'Backend development with Python, Django, and FastAPI. Experience with databases, APIs, and cloud platforms required. Work on data processing pipelines and web services for our analytics platform.',
+      salary: '$70,000 - $110,000',
+      language: 'en',
+      diploma_required: true,
+      source: 'Freemote',
+      apply_url: 'https://freemote.example.com/jobs/python-backend-1',
+      published_date: new Date().toISOString(),
+      tags: ['python', 'django', 'fastapi', 'backend'],
+      sector: 'technology'
+    },
+    {
+      title: 'DevOps Engineer',
+      company: 'Cloud Infrastructure Ltd',
+      location: 'Remote',
+      description: 'Manage and optimize our cloud infrastructure on AWS. Experience with Docker, Kubernetes, Terraform, and CI/CD pipelines required. Help scale our applications and improve deployment processes.',
+      salary: '$75,000 - $115,000',
+      language: 'en',
+      diploma_required: false,
+      source: 'Freemote',
+      apply_url: 'https://freemote.example.com/jobs/devops-1',
+      published_date: new Date().toISOString(),
+      tags: ['devops', 'aws', 'docker', 'kubernetes'],
+      sector: 'devops'
+    },
+    {
+      title: 'Product Manager',
+      company: 'SaaS Startup',
+      location: 'Remote',
+      description: 'Drive product strategy and roadmap for our B2B SaaS platform. Work closely with engineering, design, and sales teams. Experience with agile methodologies and user research required.',
+      salary: '$90,000 - $130,000',
+      language: 'en',
+      diploma_required: true,
+      source: 'Freemote',
+      apply_url: 'https://freemote.example.com/jobs/product-manager-1',
+      published_date: new Date().toISOString(),
+      tags: ['product', 'saas', 'agile', 'strategy'],
+      sector: 'product'
+    },
+    {
+      title: 'Data Scientist',
+      company: 'Analytics Pro',
+      location: 'Remote',
+      description: 'Apply machine learning and statistical analysis to solve business problems. Experience with Python, R, SQL, and data visualization tools required. Work with large datasets and build predictive models.',
+      salary: '$85,000 - $125,000',
+      language: 'en',
+      diploma_required: true,
+      source: 'Freemote',
+      apply_url: 'https://freemote.example.com/jobs/data-scientist-1',
+      published_date: new Date().toISOString(),
+      tags: ['data', 'python', 'ml', 'analytics'],
+      sector: 'data'
     }
   ]
 }
@@ -273,15 +249,14 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Fetch from all sources
-    const [remoteOKJobs, wwrJobs, testJobs] = await Promise.all([
+    // Fetch from working sources only
+    const [remoteOKJobs, testJobs] = await Promise.all([
       fetchRemoteOKJobs(),
-      fetchWWRJobs(), 
       getTestJobs()
     ])
 
     // Combine all jobs
-    const allJobs = [...remoteOKJobs, ...wwrJobs, ...testJobs]
+    const allJobs = [...remoteOKJobs, ...testJobs]
     console.log(`Total jobs collected: ${allJobs.length}`)
 
     if (allJobs.length === 0) {
@@ -314,7 +289,7 @@ Deno.serve(async (req) => {
         message: 'Jobs scraped and saved successfully', 
         sources: {
           remoteOK: remoteOKJobs.length,
-          wwr: wwrJobs.length,
+          wwr: 0, // Disabled for now
           test: testJobs.length,
           total: allJobs.length
         }
