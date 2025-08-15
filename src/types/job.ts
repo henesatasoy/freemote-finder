@@ -4,7 +4,7 @@ export interface Job {
   company: string;
   location: string;
   description: string;
-  salary?: string;
+  salary?: string | null;
   language: 'tr' | 'en' | 'both';
   diploma_required: boolean;
   source: string;
@@ -12,6 +12,8 @@ export interface Job {
   published_date: string;
   tags: string[];
   sector?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface JobFilters {
