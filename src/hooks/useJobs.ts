@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/integrations/supabase/client'
 import { Job, JobFilters } from '@/types/job'
 
 export const useJobs = () => {
@@ -16,7 +16,7 @@ export const useJobs = () => {
         .order('published_date', { ascending: false })
 
       if (error) throw error
-      setJobs(data || [])
+      setJobs((data || []) as Job[])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Bir hata oluştu')
     } finally {
@@ -60,7 +60,7 @@ export const useJobs = () => {
       const { data, error } = await query
 
       if (error) throw error
-      setJobs(data || [])
+      setJobs((data || []) as Job[])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Arama sırasında hata oluştu')
     } finally {

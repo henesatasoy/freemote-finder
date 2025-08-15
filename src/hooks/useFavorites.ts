@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/integrations/supabase/client'
 
 export const useFavorites = () => {
   const [favorites, setFavorites] = useState<string[]>([])
@@ -43,7 +43,7 @@ export const useFavorites = () => {
         .order('published_date', { ascending: false })
 
       if (error) throw error
-      return data || []
+      return (data || []) as any[]
     } catch (error) {
       console.error('Error fetching favorite jobs:', error)
       return []

@@ -16,7 +16,7 @@ export const Favorites = () => {
     const loadFavoriteJobs = async () => {
       setLoading(true);
       const jobs = await getFavoriteJobs();
-      setFavoriteJobs(jobs);
+      setFavoriteJobs(jobs as Job[]);
       setLoading(false);
     };
     

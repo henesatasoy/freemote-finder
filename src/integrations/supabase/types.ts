@@ -14,7 +14,89 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      jobs: {
+        Row: {
+          apply_url: string
+          company: string
+          created_at: string
+          description: string
+          diploma_required: boolean
+          id: string
+          language: string
+          location: string
+          published_date: string
+          salary: string | null
+          sector: string | null
+          source: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          apply_url: string
+          company: string
+          created_at?: string
+          description: string
+          diploma_required?: boolean
+          id?: string
+          language: string
+          location: string
+          published_date: string
+          salary?: string | null
+          sector?: string | null
+          source: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          apply_url?: string
+          company?: string
+          created_at?: string
+          description?: string
+          diploma_required?: boolean
+          id?: string
+          language?: string
+          location?: string
+          published_date?: string
+          salary?: string | null
+          sector?: string | null
+          source?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorites_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
