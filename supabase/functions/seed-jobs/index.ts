@@ -124,39 +124,87 @@ async function fetchWWRJobs() {
     }
     
     const text = await response.text()
+    console.log('WWR RSS sample:', text.substring(0, 500))
     
-    // Simple RSS parsing
-    const items = text.match(/<item>(.*?)<\/item>/gs) || []
+    // Improved RSS parsing
+    const items = text.match(/<item[^>]*>(.*?)<\/item>/gs) || []
     console.log(`Found ${items.length} items in WWR RSS`)
     
-    const jobs = items.slice(0, 20).map((item, index) => {
-      const title = item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/)?.[1] || `Job ${index + 1}`
-      const link = item.match(/<link>(.*?)<\/link>/)?.[1] || ''
-      const description = item.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/)?.[1] || ''
-      const pubDate = item.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || ''
+    const jobs = items.slice(0, 15).map((item, index) => {
+      // Try multiple title formats
+      let title = item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/s)?.[1] || 
+                  item.match(/<title>(.*?)<\/title>/s)?.[1] || 
+                  `Remote Job ${index + 1}`
       
-      // Extract company from title (usually in format "Company: Job Title")
-      const titleParts = title.split(':')
-      const company = titleParts.length > 1 ? titleParts[0].trim() : 'WeWorkRemotely'
-      const jobTitle = titleParts.length > 1 ? titleParts.slice(1).join(':').trim() : title
+      let link = item.match(/<link><!\[CDATA\[(.*?)\]\]><\/link>/s)?.[1] || 
+                 item.match(/<link>(.*?)<\/link>/s)?.[1] || ''
+      
+      let description = item.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/s)?.[1] || 
+                       item.match(/<description>(.*?)<\/description>/s)?.[1] || ''
+      
+      let pubDate = item.match(/<pubDate>(.*?)<\/pubDate>/s)?.[1] || ''
+      
+      // Clean HTML and decode entities
+      title = title.replace(/<[^>]*>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').trim()
+      description = description.replace(/<[^>]*>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').trim()
+      
+      // Extract company and job title
+      let company = 'WeWorkRemotely'
+      let jobTitle = title
+      
+      // Try different title parsing strategies
+      if (title.includes(':')) {
+        const parts = title.split(':')
+        if (parts.length >= 2) {
+          company = parts[0].trim()
+          jobTitle = parts.slice(1).join(':').trim()
+        }
+      } else if (title.includes(' at ')) {
+        const parts = title.split(' at ')
+        if (parts.length >= 2) {
+          jobTitle = parts[0].trim()
+          company = parts[1].trim()
+        }
+      } else if (title.includes(' - ')) {
+        const parts = title.split(' - ')
+        if (parts.length >= 2) {
+          company = parts[0].trim()
+          jobTitle = parts.slice(1).join(' - ').trim()
+        }
+      }
+      
+      // Ensure we have meaningful content
+      if (!jobTitle || jobTitle.length < 3) {
+        jobTitle = `Remote Position ${index + 1}`
+      }
+      
+      if (!company || company.length < 2) {
+        company = 'WeWorkRemotely'
+      }
+      
+      // Create a meaningful description if empty
+      if (!description || description.length < 10) {
+        description = `Remote ${jobTitle} position at ${company}. Check the full job details at WeWorkRemotely.`
+      }
       
       return {
         title: jobTitle,
         company: company,
         location: 'Remote',
-        description: description.replace(/<[^>]*>/g, '').trim(), // Remove HTML tags
+        description: description.substring(0, 500), // Limit description length
         salary: null,
         language: detectLanguage(description + ' ' + title),
         diploma_required: checkDiplomaRequirement(description),
         source: 'WeWorkRemotely',
-        apply_url: link,
+        apply_url: link || 'https://weworkremotely.com',
         published_date: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
         tags: [],
         sector: detectSector(jobTitle, [])
       }
-    }).filter(job => job.title && job.apply_url)
+    }).filter(job => job.title && job.title !== 'Remote Position' && job.apply_url)
     
-    console.log(`Processed ${jobs.length} jobs from WeWorkRemotely`)
+    console.log(`Processed ${jobs.length} valid jobs from WeWorkRemotely`)
+    console.log('Sample job:', jobs[0])
     return jobs
   } catch (error) {
     console.error('WeWorkRemotely fetch error:', error)
