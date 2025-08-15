@@ -37,12 +37,24 @@ const Index = () => {
   const handleRefreshJobs = async () => {
     setScraping(true);
     try {
-      await JobScraperService.scrapeAllJobs();
-      await fetchJobs();
-      toast({
-        title: "İş ilanları güncellendi",
-        description: "Yeni iş ilanları başarıyla yüklendi."
+      // Add test data if no jobs exist
+      const testResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL || 'https://smbhgwkbgbhsagadyifc.supabase.co'}/functions/v1/seed-jobs`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtYmhnd2tiZ2Joc2FnYWR5aWZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNTg4NDIsImV4cCI6MjA3MDgzNDg0Mn0.qBDxJa6361aUieNpvVBs-N1JWdHDdaPu6m_YHC1hOQU'}`,
+          'Content-Type': 'application/json'
+        }
       });
+
+      if (testResponse.ok) {
+        await fetchJobs();
+        toast({
+          title: "İş ilanları güncellendi",
+          description: "Test iş ilanları başarıyla yüklendi."
+        });
+      } else {
+        throw new Error('Failed to add test jobs');
+      }
     } catch (error) {
       toast({
         title: "Hata",
