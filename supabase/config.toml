@@ -1,1 +1,4 @@
 project_id = "smbhgwkbgbhsagadyifc"
+
+[functions.seed-jobs]
+verify_jwt = false
