@@ -10,6 +10,7 @@ import { useJobs } from "@/hooks/useJobs";
 import { useFavorites } from "@/hooks/useFavorites";
 import { JobScraperService } from "@/services/jobScraper";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -37,25 +38,22 @@ const Index = () => {
   const handleRefreshJobs = async () => {
     setScraping(true);
     try {
-      // Add test data if no jobs exist
-      const testResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL || 'https://smbhgwkbgbhsagadyifc.supabase.co'}/functions/v1/seed-jobs`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtYmhnd2tiZ2Joc2FnYWR5aWZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNTg4NDIsImV4cCI6MjA3MDgzNDg0Mn0.qBDxJa6361aUieNpvVBs-N1JWdHDdaPu6m_YHC1hOQU'}`,
-          'Content-Type': 'application/json'
-        }
+      // Add test data using Supabase edge function
+      const { data, error } = await supabase.functions.invoke('seed-jobs', {
+        body: {}
       });
 
-      if (testResponse.ok) {
-        await fetchJobs();
-        toast({
-          title: "İş ilanları güncellendi",
-          description: "Test iş ilanları başarıyla yüklendi."
-        });
-      } else {
-        throw new Error('Failed to add test jobs');
+      if (error) {
+        throw error;
       }
+
+      await fetchJobs();
+      toast({
+        title: "İş ilanları güncellendi",
+        description: "Test iş ilanları başarıyla yüklendi."
+      });
     } catch (error) {
+      console.error('Refresh error:', error);
       toast({
         title: "Hata",
         description: "İş ilanları güncellenirken bir hata oluştu.",
